@@ -1,17 +1,18 @@
 require('dotenv').load({silent: true});
-var express = require('express');
-var app = express();
-var path = require('path');
-var bodyParser = require('body-parser');
-var mongoose = require('mongoose');
-var config = require('./config');
-var base58 = require('./base58.js');
+const express = require('express');
+const app = express();
+const path = require('path');
+const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
+const config = require('./config');
+const base58 = require('./base58.js');
 
-var port            = process.env.PORT || 3000;
-var database        = process.env.DATABASE || process.env.MONGODB_URI || "mongodb://localhost:27017";
+const port            = process.env.PORT || 3000;
+const database        = process.env.DATABASE || process.env.MONGODB_URI || "mongodb://localhost:27017";
 
 // grab the url model
-var Url = require('./models/url');
+const Url = require('./models/url');
+const Data = require('./models/data');
 
 mongoose.connect(database);
 
@@ -37,7 +38,7 @@ app.post('/api/shorten', function (req, res) {
             res.send({'shortUrl': shortUrl});
         } else {
             // since it doesn't exist, let's go ahead and create it:
-            var newUrl = Url({
+            let newUrl = Url({
                 long_url: longUrl
             });
 
@@ -59,13 +60,18 @@ app.post('/api/shorten', function (req, res) {
 
 app.get('/:encoded_id', function (req, res) {
 
-    var base58Id = req.params.encoded_id;
+    let base58Id = req.params.encoded_id;
 
-    var id = base58.decode(base58Id);
+    let id = base58.decode(base58Id);
 
     // check if url already exists in database
     Url.findOne({_id: id}, function (err, doc) {
         if (doc) {
+            let d = new Data();
+            d.headers = req.headers;
+            if(req.query.u)
+                d.user = req.query.u;
+            d.save();
             res.redirect(doc.long_url);
         } else {
             res.redirect(config.webhost);
@@ -74,6 +80,6 @@ app.get('/:encoded_id', function (req, res) {
 
 });
 
-var server = app.listen(port, function () {
+app.listen(port, function () {
     console.log('Server listening on port ' + port);
 });
