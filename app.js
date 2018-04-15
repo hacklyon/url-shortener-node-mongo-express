@@ -75,5 +75,5 @@ app.get('/:encoded_id', function (req, res) {
 });
 
 var server = app.listen(port, function () {
-    console.log('Server listening on port 3000');
+    console.log('Server listening on port ' + port);
 });
